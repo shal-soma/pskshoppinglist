@@ -1,0 +1,324 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Weekly Shopping List</title>
+  <style>
+    :root{--bg:#0f172a;--bg2:#0b1220;--card:#0b1324;--ink:#e5e7eb;--muted:#94a3b8;--brand:#60a5fa;--accent:#7c3aed;--border:rgba(148,163,184,.18)}
+    *{box-sizing:border-box}
+    body{font:15px/1.5 ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;margin:0;padding:24px;background:linear-gradient(160deg,var(--bg),var(--bg2));color:var(--ink)}
+    h1{margin:0 0 16px;font-size:24px}
+    h2{margin:16px 0 8px;font-size:16px;color:var(--ink)}
+    h3{margin:0 0 8px;font-size:14px;color:var(--ink)}
+    .btn{appearance:none;border:1px solid var(--border);background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.02));padding:8px 12px;border-radius:10px;cursor:pointer;font-size:14px;color:var(--ink);backdrop-filter:blur(6px)}
+    .btn.primary{background:linear-gradient(135deg,var(--brand),#3b82f6);border:0;color:#0b1220}
+    .btn:disabled{opacity:.6;cursor:not-allowed}
+    .btn+ .btn{margin-left:6px}
+    input,select{padding:8px 10px;border:1px solid var(--border);border-radius:10px;font-size:14px;background:#0a1222;color:var(--ink)}
+    .toolbar{margin:0 0 16px;display:flex;flex-wrap:wrap;gap:8px}
+    .muted{color:var(--muted);font-size:13px}
+    .card{background:radial-gradient(1200px 400px at 10% -20%, rgba(124,58,237,.15), transparent 60%),radial-gradient(800px 300px at 110% 20%, rgba(96,165,250,.12), transparent 60%),var(--card);border:1px solid var(--border);border-radius:16px;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+    .card .pad{padding:14px 16px}
+
+    /* chips */
+    .chips{display:flex;gap:8px;overflow:auto;padding-bottom:6px;margin-bottom:10px}
+    .chip{white-space:nowrap;border:1px solid var(--border);padding:6px 10px;border-radius:999px;background:rgba(255,255,255,.04);cursor:pointer}
+    .chip.active{background:linear-gradient(135deg,var(--accent),#9333ea);border:0;color:#fff}
+
+    /* grids */
+    .grid-cat{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
+    .weekly-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
+
+    .cat-card{border:1px solid var(--border);border-radius:14px;background:rgba(255,255,255,.03)}
+    .cat-card h3{display:flex;align-items:center;justify-content:space-between}
+    .badge{font-size:11px;color:#0b1220;background:linear-gradient(135deg,#fde047,#f97316);border-radius:999px;padding:2px 8px}
+
+    .item-row{display:flex;align-items:center;gap:8px;padding:8px;border-top:1px solid var(--border)}
+    .item-row:first-child{border-top:0}
+    .item-row input[type=checkbox]{accent-color:#4ade80;transform:scale(1.1)}
+    .sub{font-size:12px;color:var(--muted)}
+
+    @media print{.no-print{display:none}}
+  </style>
+</head>
+<body>
+  <h1>Weekly Shopping List</h1>
+
+  <div class="toolbar no-print">
+    <button class="btn primary" id="btn-generate">Generate Weekly List</button>
+    <button class="btn" id="btn-clear-weekly">Clear weekly</button>
+    <button class="btn" id="btn-print">Print</button>
+  </div>
+
+  <section class="card">
+    <div class="pad">
+      <h2>Master list</h2>
+      <div class="muted">Tick items you need, then click "Generate weekly".</div>
+      <div class="chips" id="cat-chips"></div>
+      <div id="master-list" class="grid-cat"></div>
+      <div class="toolbar">
+        <input id="new-item" placeholder="Add item name" />
+        <select id="new-cat"></select>
+        <input id="new-qty" placeholder="Qty" style="width:100px" />
+        <button class="btn" id="btn-add">Add</button>
+        <button class="btn" id="btn-basics" title="Merge a basic household grocery list">Load basic household list</button>
+      </div>
+    </div>
+  </section>
+
+  <section style="margin-top:16px" class="card">
+    <div class="pad">
+      <h2>Weekly list</h2>
+      <div id="weekly" class="weekly-grid"></div>
+    </div>
+  </section>
+
+  <script>
+  // --- robust UUID (works on older Safari/Chrome) ---
+  function uuid(){
+    if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+    const bytes = (window.crypto && crypto.getRandomValues) ? crypto.getRandomValues(new Uint8Array(16)) : Array.from({length:16},()=>Math.floor(Math.random()*256));
+    bytes[6] = (bytes[6] & 0x0f) | 0x40; // version 4
+    bytes[8] = (bytes[8] & 0x3f) | 0x80; // variant
+    const hex = [...bytes].map(b=>b.toString(16).padStart(2,'0')).join('');
+    return `${hex.slice(0,8)}-${hex.slice(8,12)}-${hex.slice(12,16)}-${hex.slice(16,20)}-${hex.slice(20)}`;
+  }
+
+  // ---------- Storage ----------
+  const LS_MASTER = 'weekly_simple_master_v2';
+  const LS_WEEKLY = 'weekly_simple_weekly_v2';
+  const LS_CATS   = 'weekly_simple_cats_v2';
+
+  const DEFAULT_CATS = ['Fresh Produce','Bakery','Dairy & Eggs','Meat & Fish','Pantry','Frozen','Drinks','Household','Toiletries'];
+
+  const BASICS = [
+    // Fresh Produce
+    {id:uuid(),name:'Bananas',cat:'Fresh Produce'},
+    {id:uuid(),name:'Apples',cat:'Fresh Produce'},
+    {id:uuid(),name:'Oranges',cat:'Fresh Produce'},
+    {id:uuid(),name:'Lettuce',cat:'Fresh Produce'},
+    {id:uuid(),name:'Tomatoes',cat:'Fresh Produce'},
+    {id:uuid(),name:'Cucumbers',cat:'Fresh Produce'},
+    {id:uuid(),name:'Onions',cat:'Fresh Produce'},
+    {id:uuid(),name:'Garlic',cat:'Fresh Produce'},
+    {id:uuid(),name:'Potatoes',cat:'Fresh Produce'},
+    {id:uuid(),name:'Carrots',cat:'Fresh Produce'},
+    {id:uuid(),name:'Bell peppers',cat:'Fresh Produce'},
+    {id:uuid(),name:'Spinach',cat:'Fresh Produce'},
+    {id:uuid(),name:'Lemons',cat:'Fresh Produce',},
+
+    // Bakery
+    {id:uuid(),name:'Sliced bread',cat:'Bakery',qty:'1 loaf'},
+    {id:uuid(),name:'Tortillas',cat:'Bakery',qty:'1 pack'},
+    {id:uuid(),name:'Sandwich rolls',cat:'Bakery',qty:'1 pack'},
+
+    // Dairy & Eggs
+    {id:uuid(),name:'Milk',cat:'Dairy & Eggs',qty:'2 L'},
+    {id:uuid(),name:'Eggs',cat:'Dairy & Eggs',qty:'12 pcs'},
+    {id:uuid(),name:'Butter',cat:'Dairy & Eggs',qty:'250 g'},
+    {id:uuid(),name:'Cheddar cheese',cat:'Dairy & Eggs',qty:'300 g'},
+    {id:uuid(),name:'Yogurt',cat:'Dairy & Eggs',qty:'4 cups'},
+
+    // Meat & Fish
+    {id:uuid(),name:'Chicken breast',cat:'Meat & Fish',qty:'1 kg'},
+    {id:uuid(),name:'Minced beef',cat:'Meat & Fish',qty:'500 g'},
+    {id:uuid(),name:'Salmon fillets',cat:'Meat & Fish',qty:'2 pcs'},
+    {id:uuid(),name:'Bacon',cat:'Meat & Fish',qty:'1 pack'},
+
+    // Pantry
+    {id:uuid(),name:'Rice',cat:'Pantry',qty:'1 kg'},
+    {id:uuid(),name:'Pasta',cat:'Pantry',qty:'2 packs'},
+    {id:uuid(),name:'Oats',cat:'Pantry',qty:'1 kg'},
+    {id:uuid(),name:'Flour',cat:'Pantry',qty:'1 kg'},
+    {id:uuid(),name:'Sugar',cat:'Pantry',qty:'1 kg'},
+    {id:uuid(),name:'Salt',cat:'Pantry',qty:'1 pack'},
+    {id:uuid(),name:'Black pepper',cat:'Pantry',qty:'1 jar'},
+    {id:uuid(),name:'Olive oil',cat:'Pantry',qty:'1 bottle'},
+    {id:uuid(),name:'Vinegar',cat:'Pantry',qty:'1 bottle'},
+    {id:uuid(),name:'Canned tomatoes',cat:'Pantry',qty:'2 cans'},
+    {id:uuid(),name:'Tomato paste',cat:'Pantry',qty:'1 tube'},
+    {id:uuid(),name:'Kidney beans',cat:'Pantry',qty:'2 cans'},
+    {id:uuid(),name:'Chickpeas',cat:'Pantry',qty:'2 cans'},
+    {id:uuid(),name:'Peanut butter',cat:'Pantry',qty:'1 jar'},
+    {id:uuid(),name:'Jam',cat:'Pantry',qty:'1 jar'},
+    {id:uuid(),name:'Breakfast cereal',cat:'Pantry',qty:'1 box'},
+    {id:uuid(),name:'Stock cubes',cat:'Pantry',qty:'1 pack'},
+    {id:uuid(),name:'Tea bags',cat:'Pantry',qty:'1 box'},
+    {id:uuid(),name:'Coffee',cat:'Pantry',qty:'1 jar'},
+
+    // Frozen
+    {id:uuid(),name:'Frozen peas',cat:'Frozen',qty:'1 bag'},
+    {id:uuid(),name:'Frozen sweetcorn',cat:'Frozen',qty:'1 bag'},
+    {id:uuid(),name:'Mixed vegetables',cat:'Frozen',qty:'1 bag'},
+    {id:uuid(),name:'Ice cream',cat:'Frozen',qty:'1 tub'},
+
+    // Drinks
+    {id:uuid(),name:'Bottled water',cat:'Drinks',qty:'1 pack'},
+    {id:uuid(),name:'Fruit juice',cat:'Drinks',qty:'2 L'},
+    {id:uuid(),name:'Soft drinks',cat:'Drinks',qty:'1 pack'},
+
+    // Household
+    {id:uuid(),name:'Toilet paper',cat:'Household'},
+    {id:uuid(),name:'Paper towels',cat:'Household'},
+    {id:uuid(),name:'Washing-up liquid',cat:'Household'},
+    {id:uuid(),name:'Laundry detergent',cat:'Household'},
+    {id:uuid(),name:'Bin bags',cat:'Household'},
+    {id:uuid(),name:'Aluminium foil',cat:'Household'},
+    {id:uuid(),name:'Cling film',cat:'Household'},
+    {id:uuid(),name:'Hand soap',cat:'Household'},
+    {id:uuid(),name:'Dish sponges',cat:'Household'},
+    {id:uuid(),name:'Light bulbs',cat:'Household'},
+
+    // Toiletries
+    {id:uuid(),name:'Toothpaste',cat:'Toiletries'},
+    {id:uuid(),name:'Shampoo',cat:'Toiletries'},
+    {id:uuid(),name:'Conditioner',cat:'Toiletries'},
+    {id:uuid(),name:'Deodorant',cat:'Toiletries'}
+  ];
+
+  function load(k,f){try{const r=localStorage.getItem(k);return r?JSON.parse(r):f}catch{return f}}
+  function save(k,v){localStorage.setItem(k,JSON.stringify(v))}
+
+  let cats   = load(LS_CATS, DEFAULT_CATS);
+  let master = load(LS_MASTER, BASICS);
+  let weekly = load(LS_WEEKLY, []);
+
+  // ---------- UI Builders ----------
+  function renderMaster(){
+    const wrap = document.getElementById('master-list');
+    wrap.innerHTML = '';
+
+    // chips
+    const chips = document.getElementById('cat-chips');
+    chips.innerHTML='';
+    const allBtn = document.createElement('div');
+    allBtn.className='chip active'; allBtn.textContent='All';
+    chips.appendChild(allBtn);
+    let currentFilter = 'All';
+    const setActive = (name)=>{
+      currentFilter = name;
+      Array.from(chips.children).forEach(c=>c.classList.toggle('active', c.textContent===name));
+      buildCards();
+    };
+    allBtn.onclick=()=>setActive('All');
+    cats.forEach(c=>{const chip=document.createElement('div');chip.className='chip';chip.textContent=c;chip.onclick=()=>setActive(c);chips.appendChild(chip)});
+
+    function buildCards(){
+      wrap.innerHTML='';
+      const catsToShow = currentFilter==='All' ? cats : [currentFilter];
+      catsToShow.forEach(cat=>{
+        const items = master.filter(m=>m.cat===cat);
+        if(!items.length) return;
+        const card = document.createElement('div'); card.className='cat-card';
+        const head = document.createElement('div'); head.className='pad';
+        const title = document.createElement('h3');
+        const badge = document.createElement('span'); badge.className='badge'; badge.textContent=items.length+" items";
+        title.appendChild(document.createTextNode(cat)); title.appendChild(badge);
+        head.appendChild(title); card.appendChild(head);
+
+        const list = document.createElement('div');
+        items.forEach(it=>{
+          const row = document.createElement('div'); row.className='item-row';
+          const chk = document.createElement('input'); chk.type='checkbox'; chk.checked = weekly.some(w=>w.id===it.id);
+          chk.onchange=()=>{ if(chk.checked){ weekly.push({id:it.id,name:it.name,cat:it.cat,qty:it.qty}); } else { weekly = weekly.filter(w=>w.id!==it.id); } save(LS_WEEKLY,weekly) };
+          const info = document.createElement('div');
+          info.innerHTML = `<div>${it.name}</div><div class="sub">${it.qty?it.qty:''}</div>`;
+          row.append(chk, info);
+          list.appendChild(row);
+        });
+        card.appendChild(list);
+        wrap.appendChild(card);
+      });
+    }
+
+    buildCards();
+  }
+
+function renderWeekly(){
+  const container = document.getElementById('weekly');
+  container.innerHTML='';
+
+  if(!weekly.length){
+    const empty = document.createElement('div');
+    empty.className='card pad muted';
+    empty.textContent = 'No weekly items yet.';
+    container.appendChild(empty);
+    return;
+  }
+
+  const ul = document.createElement('ul');
+  ul.style.listStyle = 'none';
+  ul.style.padding = '0';
+
+  let currentCat = null;
+  cats.forEach(cat=>{
+    const items = weekly.filter(w=>w.cat===cat);
+    if(!items.length) return;
+    // category heading
+    const liHead = document.createElement('li');
+    liHead.style.marginTop = '10px';
+    liHead.innerHTML = `<strong>${cat}</strong>`;
+    ul.appendChild(liHead);
+
+    items.forEach(it=>{
+      const li = document.createElement('li');
+      const chk = document.createElement('input');
+      chk.type='checkbox';
+      li.append(chk, document.createTextNode(' '+it.name+(it.qty?` (${it.qty})`:'')));
+      ul.appendChild(li);
+    });
+  });
+
+  container.appendChild(ul);
+}
+  function addMaster(){
+    const name=document.getElementById('new-item').value.trim();
+    if(!name) return;
+    const cat=document.getElementById('new-cat').value;
+    const qty=document.getElementById('new-qty').value.trim();
+    master.push({id:uuid(),name,cat,qty});
+    master.sort((a,b)=>a.name.localeCompare(b.name));
+    save(LS_MASTER,master);
+    document.getElementById('new-item').value='';
+    document.getElementById('new-qty').value='';
+    renderMaster();
+  }
+
+  // buttons
+  document.getElementById('btn-add').onclick=addMaster;
+  document.getElementById('btn-basics').onclick=()=>{
+    // merge basics into master without duplicates (by name+cat)
+    const makeKey = (it)=> (it.name.toLowerCase()+"|"+it.cat.toLowerCase());
+    const existing = new Set(master.map(makeKey));
+    let added = 0;
+    BASICS.forEach(b=>{
+      if(!existing.has(makeKey(b))){ master.push({ ...b, id: uuid() }); added++; }
+    });
+    if(added>0){ master.sort((a,b)=>a.name.localeCompare(b.name)); save(LS_MASTER, master); renderMaster(); alert(`Added ${added} basic items to your master list.`); }
+    else{ alert('Your master list already contains the basic household items.'); }
+  };
+
+  document.getElementById('btn-generate').onclick=()=>{ save(LS_WEEKLY,weekly); renderWeekly(); };
+  document.getElementById('btn-clear-weekly').onclick=()=>{ weekly=[]; save(LS_WEEKLY,weekly); renderWeekly(); renderMaster(); };
+  document.getElementById('btn-print').onclick=()=>window.print();
+
+  // init category select
+  const sel=document.getElementById('new-cat');
+  cats.forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;sel.appendChild(o)});
+
+  // initial render
+  renderMaster();
+  renderWeekly();
+
+  // simple runtime error banner
+  window.addEventListener('error', (e)=>{
+    const b = document.createElement('div');
+    b.style.cssText='position:fixed;bottom:10px;left:10px;background:#ef4444;color:#fff;padding:8px 12px;border-radius:8px;z-index:9999';
+    b.textContent='Error: '+ (e.message||'Unknown');
+    document.body.appendChild(b);
+    setTimeout(()=>b.remove(), 6000);
+  });
+  </script>
+</body>
+</html>
