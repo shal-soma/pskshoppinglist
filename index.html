@@ -46,7 +46,7 @@
   <h1>Weekly Shopping List</h1>
 
   <div class="toolbar no-print">
-    <button class="btn primary" id="btn-generate">Generate weekly from master</button>
+    <button class="btn primary" id="btn-generate">Generate Weekly List</button>
     <button class="btn" id="btn-clear-weekly">Clear weekly</button>
     <button class="btn" id="btn-print">Print</button>
   </div>
@@ -94,87 +94,87 @@
 
   const BASICS = [
     // Fresh Produce
-    {id:uuid(),name:'Bananas',cat:'Fresh Produce',qty:'6 pcs'},
-    {id:uuid(),name:'Apples',cat:'Fresh Produce',qty:'6 pcs'},
-    {id:uuid(),name:'Oranges',cat:'Fresh Produce',qty:'6 pcs'},
-    {id:uuid(),name:'Lettuce',cat:'Fresh Produce',qty:'1 head'},
-    {id:uuid(),name:'Tomatoes',cat:'Fresh Produce',qty:'6 pcs'},
-    {id:uuid(),name:'Cucumbers',cat:'Fresh Produce',qty:'2 pcs'},
-    {id:uuid(),name:'Onions',cat:'Fresh Produce',qty:'1 kg'},
-    {id:uuid(),name:'Garlic',cat:'Fresh Produce',qty:'1 bulb'},
-    {id:uuid(),name:'Potatoes',cat:'Fresh Produce',qty:'2 kg'},
-    {id:uuid(),name:'Carrots',cat:'Fresh Produce',qty:'1 kg'},
-    {id:uuid(),name:'Bell peppers',cat:'Fresh Produce',qty:'3 pcs'},
-    {id:uuid(),name:'Spinach',cat:'Fresh Produce',qty:'1 bag'},
-    {id:uuid(),name:'Lemons',cat:'Fresh Produce',qty:'4 pcs'},
+    {id:uuid(),name:'Bananas',cat:'Fresh Produce'},
+    {id:uuid(),name:'Apples',cat:'Fresh Produce'},
+    {id:uuid(),name:'Oranges',cat:'Fresh Produce'},
+    {id:uuid(),name:'Lettuce',cat:'Fresh Produce'},
+    {id:uuid(),name:'Tomatoes',cat:'Fresh Produce'},
+    {id:uuid(),name:'Cucumbers',cat:'Fresh Produce'},
+    {id:uuid(),name:'Onions',cat:'Fresh Produce'},
+    {id:uuid(),name:'Garlic',cat:'Fresh Produce'},
+    {id:uuid(),name:'Potatoes',cat:'Fresh Produce'},
+    {id:uuid(),name:'Carrots',cat:'Fresh Produce'},
+    {id:uuid(),name:'Bell peppers',cat:'Fresh Produce'},
+    {id:uuid(),name:'Spinach',cat:'Fresh Produce'},
+    {id:uuid(),name:'Lemons',cat:'Fresh Produce',},
 
     // Bakery
-    {id:uuid(),name:'Sliced bread',cat:'Bakery',qty:'1 loaf'},
-    {id:uuid(),name:'Tortillas',cat:'Bakery',qty:'1 pack'},
-    {id:uuid(),name:'Sandwich rolls',cat:'Bakery',qty:'1 pack'},
+    {id:uuid(),name:'Sliced bread',cat:'Bakery'},
+    {id:uuid(),name:'Tortillas',cat:'Bakery'},
+    {id:uuid(),name:'Sandwich rolls',cat:'Bakery'},
 
     // Dairy & Eggs
-    {id:uuid(),name:'Milk',cat:'Dairy & Eggs',qty:'2 L'},
-    {id:uuid(),name:'Eggs',cat:'Dairy & Eggs',qty:'12 pcs'},
-    {id:uuid(),name:'Butter',cat:'Dairy & Eggs',qty:'250 g'},
-    {id:uuid(),name:'Cheddar cheese',cat:'Dairy & Eggs',qty:'300 g'},
-    {id:uuid(),name:'Yogurt',cat:'Dairy & Eggs',qty:'4 cups'},
+    {id:uuid(),name:'Milk',cat:'Dairy & Eggs'},
+    {id:uuid(),name:'Eggs',cat:'Dairy & Eggs'},
+    {id:uuid(),name:'Butter',cat:'Dairy & Eggs'},
+    {id:uuid(),name:'Cheddar cheese',cat:'Dairy & Eggs'},
+    {id:uuid(),name:'Yogurt',cat:'Dairy & Eggs'},
 
     // Meat & Fish
-    {id:uuid(),name:'Chicken breast',cat:'Meat & Fish',qty:'1 kg'},
-    {id:uuid(),name:'Minced beef',cat:'Meat & Fish',qty:'500 g'},
-    {id:uuid(),name:'Salmon fillets',cat:'Meat & Fish',qty:'2 pcs'},
-    {id:uuid(),name:'Bacon',cat:'Meat & Fish',qty:'1 pack'},
+    {id:uuid(),name:'Chicken breast',cat:'Meat & Fish',},
+    {id:uuid(),name:'Minced beef',cat:'Meat & Fish'},
+    {id:uuid(),name:'Salmon fillets',cat:'Meat & Fish'},
+    {id:uuid(),name:'Bacon',cat:'Meat & Fish'},
 
     // Pantry
-    {id:uuid(),name:'Rice',cat:'Pantry',qty:'1 kg'},
-    {id:uuid(),name:'Pasta',cat:'Pantry',qty:'2 packs'},
-    {id:uuid(),name:'Oats',cat:'Pantry',qty:'1 kg'},
-    {id:uuid(),name:'Flour',cat:'Pantry',qty:'1 kg'},
-    {id:uuid(),name:'Sugar',cat:'Pantry',qty:'1 kg'},
-    {id:uuid(),name:'Salt',cat:'Pantry',qty:'1 pack'},
-    {id:uuid(),name:'Black pepper',cat:'Pantry',qty:'1 jar'},
-    {id:uuid(),name:'Olive oil',cat:'Pantry',qty:'1 bottle'},
-    {id:uuid(),name:'Vinegar',cat:'Pantry',qty:'1 bottle'},
-    {id:uuid(),name:'Canned tomatoes',cat:'Pantry',qty:'2 cans'},
-    {id:uuid(),name:'Tomato paste',cat:'Pantry',qty:'1 tube'},
-    {id:uuid(),name:'Kidney beans',cat:'Pantry',qty:'2 cans'},
-    {id:uuid(),name:'Chickpeas',cat:'Pantry',qty:'2 cans'},
-    {id:uuid(),name:'Peanut butter',cat:'Pantry',qty:'1 jar'},
-    {id:uuid(),name:'Jam',cat:'Pantry',qty:'1 jar'},
-    {id:uuid(),name:'Breakfast cereal',cat:'Pantry',qty:'1 box'},
-    {id:uuid(),name:'Stock cubes',cat:'Pantry',qty:'1 pack'},
-    {id:uuid(),name:'Tea bags',cat:'Pantry',qty:'1 box'},
-    {id:uuid(),name:'Coffee',cat:'Pantry',qty:'1 jar'},
+    {id:uuid(),name:'Rice',cat:'Pantry'},
+    {id:uuid(),name:'Pasta',cat:'Pantry'},
+    {id:uuid(),name:'Oats',cat:'Pantry'},
+    {id:uuid(),name:'Flour',cat:'Pantry'},
+    {id:uuid(),name:'Sugar',cat:'Pantry'},
+    {id:uuid(),name:'Salt',cat:'Pantry'},
+    {id:uuid(),name:'Black pepper',cat:'Pantry'},
+    {id:uuid(),name:'Olive oil',cat:'Pantry'},
+    {id:uuid(),name:'Vinegar',cat:'Pantry'},
+    {id:uuid(),name:'Canned tomatoes',cat:'Pantry'},
+    {id:uuid(),name:'Tomato paste',cat:'Pantry'},
+    {id:uuid(),name:'Kidney beans',cat:'Pantry'},
+    {id:uuid(),name:'Chickpeas',cat:'Pantry'},
+    {id:uuid(),name:'Peanut butter',cat:'Pantry'},
+    {id:uuid(),name:'Jam',cat:'Pantry'},
+    {id:uuid(),name:'Breakfast cereal',cat:'Pantry'},
+    {id:uuid(),name:'Stock cubes',cat:'Pantry'},
+    {id:uuid(),name:'Tea bags',cat:'Pantry'},
+    {id:uuid(),name:'Coffee',cat:'Pantry'},
 
     // Frozen
-    {id:uuid(),name:'Frozen peas',cat:'Frozen',qty:'1 bag'},
-    {id:uuid(),name:'Frozen sweetcorn',cat:'Frozen',qty:'1 bag'},
-    {id:uuid(),name:'Mixed vegetables',cat:'Frozen',qty:'1 bag'},
-    {id:uuid(),name:'Ice cream',cat:'Frozen',qty:'1 tub'},
+    {id:uuid(),name:'Frozen peas',cat:'Frozen'},
+    {id:uuid(),name:'Frozen sweetcorn',cat:'Frozen'},
+    {id:uuid(),name:'Mixed vegetables',cat:'Frozen'},
+    {id:uuid(),name:'Ice cream',cat:'Frozen'},
 
     // Drinks
-    {id:uuid(),name:'Bottled water',cat:'Drinks',qty:'1 pack'},
-    {id:uuid(),name:'Fruit juice',cat:'Drinks',qty:'2 L'},
-    {id:uuid(),name:'Soft drinks',cat:'Drinks',qty:'1 pack'},
+    {id:uuid(),name:'Bottled water',cat:'Drinks'},
+    {id:uuid(),name:'Fruit juice',cat:'Drinks'},
+    {id:uuid(),name:'Soft drinks',cat:'Drinks'},
 
     // Household
-    {id:uuid(),name:'Toilet paper',cat:'Household',qty:'1 pack'},
-    {id:uuid(),name:'Paper towels',cat:'Household',qty:'1 pack'},
-    {id:uuid(),name:'Washing-up liquid',cat:'Household',qty:'1 bottle'},
-    {id:uuid(),name:'Laundry detergent',cat:'Household',qty:'1 bottle'},
-    {id:uuid(),name:'Bin bags',cat:'Household',qty:'1 pack'},
-    {id:uuid(),name:'Aluminium foil',cat:'Household',qty:'1 roll'},
-    {id:uuid(),name:'Cling film',cat:'Household',qty:'1 roll'},
-    {id:uuid(),name:'Hand soap',cat:'Household',qty:'2 bottles'},
-    {id:uuid(),name:'Dish sponges',cat:'Household',qty:'1 pack'},
-    {id:uuid(),name:'Light bulbs',cat:'Household',qty:'2 pcs'},
+    {id:uuid(),name:'Toilet paper',cat:'Household'},
+    {id:uuid(),name:'Paper towels',cat:'Household'},
+    {id:uuid(),name:'Washing-up liquid',cat:'Household'},
+    {id:uuid(),name:'Laundry detergent',cat:'Household'},
+    {id:uuid(),name:'Bin bags',cat:'Household'},
+    {id:uuid(),name:'Aluminium foil',cat:'Household'},
+    {id:uuid(),name:'Cling film',cat:'Household'},
+    {id:uuid(),name:'Hand soap',cat:'Household'},
+    {id:uuid(),name:'Dish sponges',cat:'Household'},
+    {id:uuid(),name:'Light bulbs',cat:'Household'},
 
     // Toiletries
-    {id:uuid(),name:'Toothpaste',cat:'Toiletries',qty:'1 tube'},
-    {id:uuid(),name:'Shampoo',cat:'Toiletries',qty:'1 bottle'},
-    {id:uuid(),name:'Conditioner',cat:'Toiletries',qty:'1 bottle'},
-    {id:uuid(),name:'Deodorant',cat:'Toiletries',qty:'1 pc'}
+    {id:uuid(),name:'Toothpaste',cat:'Toiletries'},
+    {id:uuid(),name:'Shampoo',cat:'Toiletries'},
+    {id:uuid(),name:'Conditioner',cat:'Toiletries'},
+    {id:uuid(),name:'Deodorant',cat:'Toiletries'}
   ];
 
   function load(k,f){try{const r=localStorage.getItem(k);return r?JSON.parse(r):f}catch{return f}}
@@ -224,9 +224,7 @@
           chk.onchange=()=>{ if(chk.checked){ weekly.push({id:it.id,name:it.name,cat:it.cat,qty:it.qty}); } else { weekly = weekly.filter(w=>w.id!==it.id); } save(LS_WEEKLY,weekly) };
           const info = document.createElement('div');
           info.innerHTML = `<div>${it.name}</div><div class="sub">${it.qty?it.qty:''}</div>`;
-          const del = document.createElement('button'); del.className='btn'; del.textContent='Remove';
-          del.onclick=()=>{ master = master.filter(m=>m.id!==it.id); save(LS_MASTER,master); renderMaster(); renderWeekly(); };
-          row.append(chk, info, del);
+          row.append(chk, info);
           list.appendChild(row);
         });
         card.appendChild(list);
